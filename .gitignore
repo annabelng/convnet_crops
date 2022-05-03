@@ -1,0 +1,6 @@
+data/*
+ssh_id
+ssh_id.pub
+results/*
+tmp_trainer/*
+figures/*
