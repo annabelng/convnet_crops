@@ -112,9 +112,8 @@ def train():
         label2id[label]=str(i)
         id2label[str(i)]=label
         
-    # load model
-    model = ConvNextForImageClassification.from_pretrained(
-        model_name_or_path,
+    model = ViTForImageClassification.from_pretrained(
+        "google/vit-base-patch16-224",
         num_labels=len(labels),
         ignore_mismatched_sizes=True,
         id2label=id2label,
