@@ -123,20 +123,8 @@ def train():
     from transformers import TrainingArguments
     from transformers import EarlyStoppingCallback
     # model arguments
-    training_args = TrainingArguments(
-      output_dir="./results",
-      logging_dir = '/home/runs',
-      evaluation_strategy='steps',
-      per_device_train_batch_size=64,
-      num_train_epochs=4,
-      save_total_limit = 4, # Only last 4 models are saved. Older ones are deleted.
-      fp16=True,
-      save_steps=100,
-      eval_steps=100,
-      logging_steps=10,
-      learning_rate=2e-4,
-      load_best_model_at_end=True,
-    )
+    learning_rates = [5e-4, 2e-3]
+    epochs = [3,4,5]
     
     import torch
 
@@ -155,19 +143,45 @@ def train():
     )
     
     from transformers import Trainer
+    
+    for lr in learning_rates:
+        for epoch in epochs:
+            training_args = TrainingArguments(
+              output_dir="./results",
+              logging_dir = '/home/runs',
+              evaluation_strategy='steps',
+              per_device_train_batch_size=64,
+              num_train_epochs=epoch,
+              save_total_limit = 4, # Only last 4 models are saved
+              fp16=True,
+              save_steps=100,
+              eval_steps=100,
+              logging_steps=10,
+              learning_rate=lr,
+              load_best_model_at_end=True,
+            )
+    
+        trainer = Trainer(
+            model=model,
+            args=training_args,
+            data_collator=collate_fn,
+            compute_metrics=compute_metrics,
+            train_dataset=train_ds,
+            eval_dataset=test_ds,
+            tokenizer=feature_extractor,
+            model_init = model_init,
+        )
+        train_results = trainer.train()
+        trainer.save_model()
+        trainer.log_metrics("train", train_results.metrics)
+        trainer.save_metrics("train", train_results.metrics)
+        trainer.save_state()
+        
+        metrics = trainer.evaluate(test_ds)
+        trainer.log_metrics("eval", metrics)
+        trainer.save_metrics("eval", metrics)
 
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        data_collator=collate_fn,
-        compute_metrics=compute_metrics,
-        train_dataset=train_ds,
-        eval_dataset=test_ds,
-        tokenizer=feature_extractor,
-        model_init = model_init,
-    )
-
-    best_run = trainer.hyperparameter_search(n_trials=3, direction="maximize")
+    #best_run = trainer.hyperparameter_search(n_trials=3, direction="maximize")
     
 if __name__ == '__main__':
     train()
