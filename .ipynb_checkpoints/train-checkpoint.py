@@ -161,25 +161,25 @@ def train():
               load_best_model_at_end=True,
             )
     
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            data_collator=collate_fn,
-            compute_metrics=compute_metrics,
-            train_dataset=train_ds,
-            eval_dataset=test_ds,
-            tokenizer=feature_extractor,
-            model_init = model_init,
-        )
-        train_results = trainer.train()
-        trainer.save_model()
-        trainer.log_metrics("train", train_results.metrics)
-        trainer.save_metrics("train", train_results.metrics)
-        trainer.save_state()
-        
-        metrics = trainer.evaluate(test_ds)
-        trainer.log_metrics("eval", metrics)
-        trainer.save_metrics("eval", metrics)
+            trainer = Trainer(
+                model=model,
+                args=training_args,
+                data_collator=collate_fn,
+                compute_metrics=compute_metrics,
+                train_dataset=train_ds,
+                eval_dataset=test_ds,
+                tokenizer=feature_extractor,
+                model_init = model_init,
+            )
+            train_results = trainer.train()
+            trainer.save_model()
+            trainer.log_metrics("train", train_results.metrics)
+            trainer.save_metrics("train", train_results.metrics)
+            trainer.save_state()
+
+            metrics = trainer.evaluate(test_ds)
+            trainer.log_metrics("eval", metrics)
+            trainer.save_metrics("eval", metrics)
 
     #best_run = trainer.hyperparameter_search(n_trials=3, direction="maximize")
     
