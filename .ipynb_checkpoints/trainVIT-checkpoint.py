@@ -123,8 +123,8 @@ def train():
     from transformers import TrainingArguments
     from transformers import EarlyStoppingCallback
     # model arguments
-    learning_rates = [5e-4, 2e-4, 2e-3]
-    epochs = [3,4]
+    learning_rates = [5e-4, 2e-4]
+    epochs = [4,5]
     
     import torch
 
@@ -139,7 +139,7 @@ def train():
     for lr in learning_rates:
         for epoch in epochs:
             training_args = TrainingArguments(
-              output_dir="./VITresults",
+              output_dir="./results/vit",
               logging_dir = '/home/runs',
               evaluation_strategy='steps',
               per_device_train_batch_size=64,

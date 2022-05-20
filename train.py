@@ -123,8 +123,8 @@ def train():
     from transformers import TrainingArguments
     from transformers import EarlyStoppingCallback
     # model arguments
-    learning_rates = [5e-4, 2e-3]
-    epochs = [3,4,5]
+    learning_rates = [5e-4, 2e-4]
+    epochs = [4,5]
     
     import torch
 
@@ -147,7 +147,7 @@ def train():
     for lr in learning_rates:
         for epoch in epochs:
             training_args = TrainingArguments(
-              output_dir="./results",
+              output_dir="./results/convnext",
               logging_dir = '/home/runs',
               evaluation_strategy='steps',
               per_device_train_batch_size=64,
@@ -169,8 +169,8 @@ def train():
                 train_dataset=train_ds,
                 eval_dataset=test_ds,
                 tokenizer=feature_extractor,
-                model_init = model_init,
             )
+        
             train_results = trainer.train()
             trainer.save_model()
             trainer.log_metrics("train", train_results.metrics)
