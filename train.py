@@ -48,7 +48,7 @@ def train():
     y_test = y_test.reset_index(drop=True)
     
     # loading model and feature extractor
-    model_name_or_path = 'facebook/convnext-tiny-224'
+    model_name_or_path = basedir + '/results/convnext'
     feature_extractor = ConvNextFeatureExtractor.from_pretrained(model_name_or_path)
 
     # building feature extractor to grab pixel values
@@ -144,6 +144,7 @@ def train():
     
     from transformers import Trainer
     
+    '''
     for lr in learning_rates:
         for epoch in epochs:
             training_args = TrainingArguments(
@@ -180,7 +181,41 @@ def train():
             metrics = trainer.evaluate(test_ds)
             trainer.log_metrics("eval", metrics)
             trainer.save_metrics("eval", metrics)
+'''
+    training_args = TrainingArguments(
+        output_dir="./results/bestconv",
+        logging_dir = '/home/runs',
+        evaluation_strategy='steps',
+        per_device_train_batch_size=64,
+        num_train_epochs=10,
+        save_total_limit = 4, # Only last 4 models are saved
+        fp16=True,
+        save_steps=100,
+        eval_steps=100,
+        logging_steps=10,
+        learning_rate=2e-4,
+        load_best_model_at_end=True,
+        )
 
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        data_collator=collate_fn,
+        compute_metrics=compute_metrics,
+        train_dataset=train_ds,
+        eval_dataset=test_ds,
+        tokenizer=feature_extractor,
+    )
+
+    train_results = trainer.train()
+    trainer.save_model()
+    trainer.log_metrics("train", train_results.metrics)
+    trainer.save_metrics("train", train_results.metrics)
+    trainer.save_state()
+
+    metrics = trainer.evaluate(test_ds)
+    trainer.log_metrics("eval", metrics)
+    trainer.save_metrics("eval", metrics)
     #best_run = trainer.hyperparameter_search(n_trials=3, direction="maximize")
     
 if __name__ == '__main__':

@@ -82,7 +82,7 @@ def predict():
            # y_label = int(self.labels.iloc[idx])
 
             data = self.transform(image,y_label)
-            data['pixel_values'] = torch.squeeze(data['pixel_values'])
+            # data['pixel_values'] = torch.squeeze(data['pixel_values'])
             return data
         
     test_ds = CultivarDataset(
@@ -90,21 +90,44 @@ def predict():
     df_label = test_cultivar['cultivar_index'],
     transform = FeatureExtractor())
     
+    def collate_fn(batch):
+        return {
+            'pixel_values': torch.stack([x['pixel_values'][0] for x in batch]),
+            'labels': torch.tensor([x['labels'] for x in batch])
+        }
+    
     from transformers import Trainer
     from transformers import TrainingArguments
     #model = ConvNextForImageClassification.from_pretrained(model_name_or_path)
     model = ViTForImageClassification.from_pretrained(
             model_name_or_path
         )
-
+    model.eval()
+    
+    from datasets import load_metric
+    def compute_metrics(eval_pred):
+        predictions, labels = eval_pred
+        predictions = predictions.argmax(axis=-1)
+        return metric.compute(predictions=predictions, references=labels)
+    
     trainer = Trainer(
-        model=model
+        model=model,
+        data_collator=collate_fn,
+        compute_metrics=compute_metrics,
+        tokenizer=feature_extractor,
+        
     )
+    
     from PIL import ImageFile
     ImageFile.LOAD_TRUNCATED_IMAGES = True
 
     pred = trainer.predict(test_ds).predictions
     
+    with open(basedir + '/vitpredictions','w') as f:
+    for row in pred:
+        f.write(str(row))
+        f.write('\n')
+        
     from scipy.special import softmax
     # softmax each row so each row sums to 1
     prob = softmax(pred, axis = 1)
