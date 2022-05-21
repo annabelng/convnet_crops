@@ -102,9 +102,11 @@ def predict():
     model = ViTForImageClassification.from_pretrained(
             model_name_or_path
         )
+    
     model.eval()
     
     from datasets import load_metric
+    metric = load_metric("accuracy")
     def compute_metrics(eval_pred):
         predictions, labels = eval_pred
         predictions = predictions.argmax(axis=-1)
@@ -113,7 +115,6 @@ def predict():
     trainer = Trainer(
         model=model,
         data_collator=collate_fn,
-        compute_metrics=compute_metrics,
         tokenizer=feature_extractor,
         
     )
@@ -124,9 +125,9 @@ def predict():
     pred = trainer.predict(test_ds).predictions
     
     with open(basedir + '/vitpredictions','w') as f:
-    for row in pred:
-        f.write(str(row))
-        f.write('\n')
+        for row in pred:
+            f.write(str(row))
+            f.write('\n')
         
     from scipy.special import softmax
     # softmax each row so each row sums to 1
